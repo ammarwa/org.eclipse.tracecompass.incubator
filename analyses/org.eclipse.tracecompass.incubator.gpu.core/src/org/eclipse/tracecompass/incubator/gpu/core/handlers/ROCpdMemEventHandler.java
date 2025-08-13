@@ -18,17 +18,28 @@ import org.eclipse.tracecompass.incubator.gpu.core.trace.IGpuTraceEventLayout.IA
 import org.eclipse.tracecompass.statesystem.core.ITmfStateSystemBuilder;
 import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
 import org.eclipse.tracecompass.tmf.core.statesystem.ITmfStateProvider;
-import org.eclipse.tracecompass.tmf.core.statesystem.ITmfStateProvider.FutureEventType;
 
 /**
  * Handler for All APIs used to pilot the GPU.
  *
  * This handler handles all API calls that are written to call stacks.
  */
-public class ApiEventHandler implements IGpuEventHandler {
+public class ROCpdMemEventHandler implements IGpuEventHandler {
 
     @Override
     public void handleEvent(ITmfEvent event, ITmfStateSystemBuilder ssb, IGpuTraceEventLayout layout, ITmfStateProvider stateProvider) {
+        Long streamId = event.getContent().getFieldValue(Long.class, "stream_id"); //$NON-NLS-1$
+        if (streamId == null) {
+            return;
+        }
+        Long srcAgentId = event.getContent().getFieldValue(Long.class, "src_agent_abs_index"); //$NON-NLS-1$
+        if (srcAgentId == null) {
+            return;
+        }
+        Long dstAgentId = event.getContent().getFieldValue(Long.class, "dst_agent_abs_index"); //$NON-NLS-1$
+        if (dstAgentId == null) {
+            return;
+        }
         Long tid = event.getContent().getFieldValue(Long.class, layout.fieldThreadId());
         Long pid = event.getContent().getFieldValue(Long.class, "pid"); //$NON-NLS-1$
         if (tid == null) {
@@ -39,22 +50,17 @@ public class ApiEventHandler implements IGpuEventHandler {
         }
         int rootQuark = ssb.getQuarkAbsoluteAndAdd(GpuCallStackAnalysis.ROOT, "Process: " + pid.toString()); //$NON-NLS-1$
         int threadQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Thread: " + tid.toString()); //$NON-NLS-1$
+        int streamQuark = ssb.getQuarkRelativeAndAdd(threadQuark, "Stream: " + streamId.toString()); //$NON-NLS-1$
+        int MemCpyHeaderQuark = ssb.getQuarkRelativeAndAdd(streamQuark, "Memory Copies [SRC Agent : DST Agent]"); //$NON-NLS-1$
+        int MemCpyQuark = ssb.getQuarkRelativeAndAdd(MemCpyHeaderQuark, srcAgentId.toString() + " : " + dstAgentId.toString()); //$NON-NLS-1$
 
         IApiEventLayout apiLayout = layout.getCorrespondingApiLayout(event);
-        int apiQuark = ssb.getQuarkRelativeAndAdd(threadQuark, apiLayout.getApiName());
-        int callStackQuark = ssb.getQuarkRelativeAndAdd(apiQuark, CallStackAnalysis.CALL_STACK);
+        int callStackQuark = ssb.getQuarkRelativeAndAdd(MemCpyQuark, CallStackAnalysis.CALL_STACK);
 
         if (apiLayout.isBeginEvent(event)) {
             ssb.pushAttribute(event.getTimestamp().getValue(), apiLayout.getEventName(event), callStackQuark);
         } else {
             ssb.popAttribute(event.getTimestamp().getValue(), callStackQuark);
-        }
-        if (!layout.fieldDuration().equals("")) { //$NON-NLS-1$
-            Long duration = event.getContent().getFieldValue(Long.class, layout.fieldDuration());
-            if (duration == null) {
-                duration = 1L;
-            }
-            stateProvider.addFutureEvent(event.getTimestamp().getValue() + duration, event, callStackQuark, FutureEventType.POP);
         }
     }
 }
