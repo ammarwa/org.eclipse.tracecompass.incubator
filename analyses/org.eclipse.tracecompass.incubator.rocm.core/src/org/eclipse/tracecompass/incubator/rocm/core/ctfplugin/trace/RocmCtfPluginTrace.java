@@ -10,12 +10,9 @@
  *******************************************************************************/
 package org.eclipse.tracecompass.incubator.rocm.core.ctfplugin.trace;
 
-import java.util.Map;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.incubator.gpu.core.trace.IGpuTrace;
@@ -67,24 +64,25 @@ public class RocmCtfPluginTrace extends RocmTrace implements IGpuTrace {
         ImmutableList.Builder<ITmfEventAspect<?>> builder = new Builder<>();
         builder.addAll(super.getEventAspects());
         fAspects = builder.build();
-        lookForKernelGpuActivityMetadata();
+//        lookForKernelGpuActivityMetadata();
     }
 
     @Override
     public @Nullable IStatus validate(final @Nullable IProject project, final @Nullable String path) {
         IStatus status = super.validate(project, path);
         if (status instanceof CtfTraceValidationStatus) {
-            Map<String, String> environment = ((CtfTraceValidationStatus) status).getEnvironment();
+//            Map<String, String> environment = ((CtfTraceValidationStatus) status).getEnvironment();
             /* Make sure the domain is "kernel" in the trace's env vars */
-            String domain = environment.get("tracer_name"); //$NON-NLS-1$
-            boolean isRocprofilerVersionPresent = environment.get("rocprofiler_version") != null; //$NON-NLS-1$
-            if (domain == null || !domain.equals("\"barectf\"")) { //$NON-NLS-1$
-                return new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-                        "This trace was not recognized as a ROCm trace. You can update your rocprofiler version or you can change manually the tracer name to \"rocprof\" in the metadata file to force the validation."); //$NON-NLS-1$
-            }
-            if (isRocprofilerVersionPresent) {
-                return new TraceValidationStatus(CONFIDENCE, Activator.PLUGIN_ID);
-            }
+//            String domain = environment.get("tracer_name"); //$NON-NLS-1$
+//            boolean isRocprofilerVersionPresent = environment.get("rocprofiler_version") != null; //$NON-NLS-1$
+//            if (domain == null || !domain.equals("\"barectf\"")) { //$NON-NLS-1$
+//                return new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+//                        "This trace was not recognized as a ROCm trace. You can update your rocprofiler version or you can change manually the tracer name to \"rocprof\" in the metadata file to force the validation."); //$NON-NLS-1$
+//            }
+//            if (isRocprofilerVersionPresent) {
+//                return new TraceValidationStatus(CONFIDENCE, Activator.PLUGIN_ID);
+//            }
+            return new TraceValidationStatus(CONFIDENCE, Activator.PLUGIN_ID);
         }
         return status;
     }
@@ -95,18 +93,18 @@ public class RocmCtfPluginTrace extends RocmTrace implements IGpuTrace {
      * isContainingKernelGpuActivity to calculate this boolean if the metadata
      * is not present.
      */
-    private void lookForKernelGpuActivityMetadata() {
-        @SuppressWarnings("null")
-        Map<String, String> environment = this.getEnvironment();
-        /* Make sure the domain is "kernel" in the trace's env vars */
-        String rocprofilerArgs = environment.get("args"); //$NON-NLS-1$
-        if (rocprofilerArgs == null) {
-            return;
-        } else if (rocprofilerArgs.contains("--sys-trace") || rocprofilerArgs.contains("--hsa-trace")) { //$NON-NLS-1$ //$NON-NLS-2$
-            fIsContainingKernelGpuActivity = true;
-        }
-        fIsContainingKernelGpuActivity = false;
-    }
+//    private void lookForKernelGpuActivityMetadata() {
+//        @SuppressWarnings("null")
+//        Map<String, String> environment = this.getEnvironment();
+//        /* Make sure the domain is "kernel" in the trace's env vars */
+//        String rocprofilerArgs = environment.get("args"); //$NON-NLS-1$
+//        if (rocprofilerArgs == null) {
+//            return;
+//        } else if (rocprofilerArgs.contains("--sys-trace") || rocprofilerArgs.contains("--hsa-trace")) { //$NON-NLS-1$ //$NON-NLS-2$
+//            fIsContainingKernelGpuActivity = true;
+//        }
+//        fIsContainingKernelGpuActivity = false;
+//    }
 
     /**
      * Look for kernel GPU activity in the trace and tries to correlate it with

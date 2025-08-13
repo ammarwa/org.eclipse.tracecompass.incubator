@@ -27,21 +27,37 @@ import com.google.common.collect.ImmutableList;
  */
 public class RocmCtfPluginTraceEventLayout implements IGpuTraceEventLayout {
 
-    /** Suffix for HSA events */
-    public static final String HSA_BEGIN_SUFFIX = "_begin"; //$NON-NLS-1$
-    /** Suffix for HIP events */
-    public static final String HIP_BEGIN_SUFFIX = "Begin"; //$NON-NLS-1$
-    /** HIP string */
-    public static final String HIP = "hip"; //$NON-NLS-1$
-    /** HSA string */
-    public static final String HSA = "hsa"; //$NON-NLS-1$
-    /** HIP operation */
-    public static final String HIP_OP = "hip_op"; //$NON-NLS-1$
-    /** HSA operation */
-    public static final String HSA_OP = "hsa_op"; //$NON-NLS-1$
+    /** Suffix for all events */
+    public static final String BEGIN_SUFFIX = "_start"; //$NON-NLS-1$
+    /** HIP Compiler string */
+    public static final String HIP_COMPILER = "hip_compiler_region"; //$NON-NLS-1$
+    /** HIP Runtime string */
+    public static final String HIP_RUNTIME = "hip_runtime_region"; //$NON-NLS-1$
+    /** HSA Core string */
+    public static final String HSA_CORE = "hsa_core_region"; //$NON-NLS-1$
+    /** HSA AMD EXT string */
+    public static final String HSA_AMD_EXT = "hsa_amd_ext_region"; //$NON-NLS-1$
+    /** Marker Core string */
+    public static final String MARKER_CORE = "marker_core_region"; //$NON-NLS-1$
+    /** Memory Copy string */
+    public static final String MEM_COPY = "memory_copy_event"; //$NON-NLS-1$
+    /** Memory Allocation string */
+    public static final String MEM_ALLOC = "memory_allocation_event"; //$NON-NLS-1$
+    /** Kernel Dispatch string */
+    public static final String KERNEL_DISPATCH = "kernel_dispatch_event"; //$NON-NLS-1$
+    /** Counter Collection string */
+    public static final String COUNTER_COLLECTION = "counter_collection_event"; //$NON-NLS-1$
+
 
     private static @Nullable RocmCtfPluginTraceEventLayout INSTANCE;
-    private static List<IApiEventLayout> fApiLayouts = ImmutableList.of(new HsaApiEventLayout(), new HipApiEventLayout());
+    private static List<IApiEventLayout> fApiLayouts = ImmutableList.of(
+            new HipCompilerApiEventLayout(),
+            new HipRuntimeApiEventLayout(),
+            new HsaCoreApiEventLayout(),
+            new HsaAmdExtApiEventLayout(),
+            new MarkerCoreApiEventLayout(),
+            new GenericApiEventLayout(),
+            new UnknownApiEventLayout());
 
     /**
      * The instance of this event layout
@@ -67,31 +83,49 @@ public class RocmCtfPluginTraceEventLayout implements IGpuTraceEventLayout {
 
     @Override
     public @NonNull IApiEventLayout getCorrespondingApiLayout(ITmfEvent event) {
-        if (event.getName().startsWith(HSA)) {
-            return fApiLayouts.get(0);
-        }
-        return fApiLayouts.get(1);
+//        if (event.getName().startsWith(HIP_COMPILER)) {
+//            return fApiLayouts.get(0);
+//        } else if (event.getName().startsWith(HIP_RUNTIME)) {
+//            return fApiLayouts.get(1);
+//        } else if (event.getName().startsWith(HSA_CORE)) {
+//            return fApiLayouts.get(2);
+//        } else if (event.getName().startsWith(HSA_AMD_EXT)) {
+//            return fApiLayouts.get(3);
+//        } else if (event.getName().startsWith(MARKER_CORE)) {
+//            return fApiLayouts.get(4);
+//        }
+//        return fApiLayouts.getLast();
+        return fApiLayouts.get(5);
     }
 
     @Override
-    public boolean isMemcpyBegin(ITmfEvent event) {
-        return false;
+    public boolean isMemcpy(ITmfEvent event) {
+        return event.getName().startsWith(MEM_COPY);
     }
 
     @Override
-    public boolean isLaunchBegin(ITmfEvent event) {
-        return false;
+    public boolean isMemAlloc(ITmfEvent event) {
+        return event.getName().startsWith(MEM_ALLOC);
+    }
+
+    @Override
+    public boolean isCounterCollection(ITmfEvent event) {
+        return event.getName().startsWith(COUNTER_COLLECTION);
+    }
+
+    @Override
+    public boolean isKernelDispatch(ITmfEvent event) {
+        return event.getName().startsWith(KERNEL_DISPATCH);
     }
 
     @Override
     public boolean isApiEvent(ITmfEvent event) {
-        String name = event.getName();
-        return (name.startsWith(HSA) && !name.startsWith(HSA_OP)) || (name.startsWith(HIP) && !name.startsWith(HIP_OP));
+        return !(isMemcpy(event) || isKernelDispatch(event) || isMemAlloc(event) || isCounterCollection(event));
     }
 
     @Override
     public @NonNull String fieldThreadId() {
-        return "context._thread_id"; //$NON-NLS-1$
+        return "tid"; //$NON-NLS-1$
     }
 
     @Override
@@ -100,22 +134,73 @@ public class RocmCtfPluginTraceEventLayout implements IGpuTraceEventLayout {
     }
 
     /**
-     * Event layout for HSA api events
+     * Event layout for HIP Compiler API events
      */
-    public static class HsaApiEventLayout extends RocmApiCtfPluginEventLayout {
+    public static class HipCompilerApiEventLayout extends RocmApiCtfPluginEventLayout {
         @Override
         public String getApiName() {
-            return "HSA"; //$NON-NLS-1$
+            return "HIP Compiler"; //$NON-NLS-1$
         }
     }
 
     /**
-     * Event layout for HIP api events
+     * Event layout for HIP Compiler API events
      */
-    public static class HipApiEventLayout extends RocmApiCtfPluginEventLayout {
+    public static class HipRuntimeApiEventLayout extends RocmApiCtfPluginEventLayout {
         @Override
         public String getApiName() {
-            return "HIP"; //$NON-NLS-1$
+            return "HIP Runtime"; //$NON-NLS-1$
         }
     }
+
+    /**
+     * Event layout for HSA Core API events
+     */
+    public static class HsaCoreApiEventLayout extends RocmApiCtfPluginEventLayout {
+        @Override
+        public String getApiName() {
+            return "HSA Core"; //$NON-NLS-1$
+        }
+    }
+
+    /**
+     * Event layout for HSA AMD EXT API events
+     */
+    public static class HsaAmdExtApiEventLayout extends RocmApiCtfPluginEventLayout {
+        @Override
+        public String getApiName() {
+            return "HSA AMD Extension"; //$NON-NLS-1$
+        }
+    }
+
+    /**
+     * Event layout for Marker Core API events
+     */
+    public static class MarkerCoreApiEventLayout extends RocmApiCtfPluginEventLayout {
+        @Override
+        public String getApiName() {
+            return "Marker Core"; //$NON-NLS-1$
+        }
+    }
+
+    /**
+     * Event layout for Generic API events
+     */
+    public static class GenericApiEventLayout extends RocmApiCtfPluginEventLayout {
+        @Override
+        public String getApiName() {
+            return "API Trace"; //$NON-NLS-1$
+        }
+    }
+
+    /**
+     * Event layout for Unknown API events
+     */
+    public static class UnknownApiEventLayout extends RocmApiCtfPluginEventLayout {
+        @Override
+        public String getApiName() {
+            return "Unknown"; //$NON-NLS-1$
+        }
+    }
+
 }

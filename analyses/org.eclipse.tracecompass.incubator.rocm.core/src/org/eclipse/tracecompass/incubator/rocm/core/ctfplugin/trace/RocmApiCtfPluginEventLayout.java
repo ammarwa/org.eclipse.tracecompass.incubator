@@ -22,21 +22,15 @@ public abstract class RocmApiCtfPluginEventLayout implements IApiEventLayout {
 
     @Override
     public boolean isBeginEvent(ITmfEvent event) {
-        return event.getName().endsWith(RocmCtfPluginTraceEventLayout.HSA_BEGIN_SUFFIX) ||
-                event.getName().endsWith(RocmCtfPluginTraceEventLayout.HIP_BEGIN_SUFFIX);
+        return event.getName().endsWith(RocmCtfPluginTraceEventLayout.BEGIN_SUFFIX);
     }
 
     @Override
     public String getEventName(ITmfEvent event) {
-        if (isBeginEvent(event)) {
-            if (event.getName().startsWith(RocmCtfPluginTraceEventLayout.HIP)) {
-                return event.getName().substring(0, event.getName().length() - 5);
-            }
-            return event.getName().substring(0, event.getName().length() - 6);
+        String name = event.getContent().getFieldValue(String.class, "name"); //$NON-NLS-1$
+        if (name == null) {
+            return event.getName();
         }
-        if (event.getName().startsWith(RocmCtfPluginTraceEventLayout.HIP)) {
-            return event.getName().substring(0, event.getName().length() - 3);
-        }
-        return event.getName().substring(0, event.getName().length() - 4);
+        return name;
     }
 }
