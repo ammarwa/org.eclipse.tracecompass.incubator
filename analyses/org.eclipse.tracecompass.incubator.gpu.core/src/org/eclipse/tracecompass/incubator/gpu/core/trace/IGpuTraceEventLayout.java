@@ -48,7 +48,28 @@ public interface IGpuTraceEventLayout {
      *            the event object
      * @return whether the event corresponds to a memory copy
      */
-    public abstract boolean isMemcpyBegin(ITmfEvent event);
+    public abstract boolean isMemcpy(ITmfEvent event);
+
+    /**
+     * This function returns whether or not this event is a call that will
+     * result in a memory allocation on a specific device.
+     *
+     * @param event
+     *            the event object
+     * @return whether the event corresponds to a memory allocation
+     */
+    public abstract boolean isMemAlloc(ITmfEvent event);
+
+    /**
+     * This function returns whether or not this event is a counter
+     * collection event reporting a specific counter value for a
+     * specific kernel dispatch or for a specific device
+     *
+     * @param event
+     *            the event object
+     * @return whether the event corresponds to a counter collection event
+     */
+    public abstract boolean isCounterCollection(ITmfEvent event);
 
     /**
      * This function returns whether or not this event is a call that will
@@ -58,7 +79,7 @@ public interface IGpuTraceEventLayout {
      *            the event object
      * @return whether the event corresponds to a kernel launch
      */
-    public abstract boolean isLaunchBegin(ITmfEvent event);
+    public abstract boolean isKernelDispatch(ITmfEvent event);
 
     /**
      * This function returns whether or not this event is corresponding to an

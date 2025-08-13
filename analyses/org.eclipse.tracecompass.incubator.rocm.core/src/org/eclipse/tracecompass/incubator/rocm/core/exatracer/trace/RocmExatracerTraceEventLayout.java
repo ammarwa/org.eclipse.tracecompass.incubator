@@ -68,12 +68,12 @@ public class RocmExatracerTraceEventLayout implements IGpuTraceEventLayout {
     }
 
     @Override
-    public boolean isMemcpyBegin(ITmfEvent event) {
+    public boolean isMemcpy(ITmfEvent event) {
         return false;
     }
 
     @Override
-    public boolean isLaunchBegin(ITmfEvent event) {
+    public boolean isKernelDispatch(ITmfEvent event) {
         return false;
     }
 
@@ -110,5 +110,17 @@ public class RocmExatracerTraceEventLayout implements IGpuTraceEventLayout {
         public String getApiName() {
             return "HIP"; //$NON-NLS-1$
         }
+    }
+
+    @Override
+    public boolean isMemAlloc(ITmfEvent event) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isCounterCollection(ITmfEvent event) {
+        // TODO Auto-generated method stub
+        return false;
     }
 }

@@ -27,7 +27,7 @@
             id="org.eclipse.tracecompass.incubator.rocm.core.stateprovider.atomic"
             name="ROCm Analysis">
          <tracetype
-               applies="true"
+               applies="false"
                class="org.eclipse.tracecompass.incubator.rocm.core.ctfplugin.trace.RocmCtfPluginTrace">
          </tracetype>
       </module>
