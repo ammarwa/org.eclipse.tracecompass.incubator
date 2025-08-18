@@ -30,11 +30,15 @@ public class ROCpdMemAllocEventHandler implements IGpuEventHandler {
     public void handleEvent(ITmfEvent event, ITmfStateSystemBuilder ssb, IGpuTraceEventLayout layout, ITmfStateProvider stateProvider) {
         String agentType = event.getContent().getFieldValue(String.class, "agent_type"); //$NON-NLS-1$
         boolean isGPU = false;
-        if (agentType != null && agentType.contains("gpu")) { //$NON-NLS-1$
+        if (agentType != null && agentType.contains("GPU")) { //$NON-NLS-1$
             isGPU = true;
         }
         Long agentId = event.getContent().getFieldValue(Long.class, "agent_abs_index"); //$NON-NLS-1$
         if (agentId == null) {
+            return;
+        }
+        Long allocation_id = event.getContent().getFieldValue(Long.class, "allocation_id"); //$NON-NLS-1$
+        if (allocation_id == null) {
             return;
         }
         Long pid = event.getContent().getFieldValue(Long.class, "pid"); //$NON-NLS-1$
@@ -52,22 +56,21 @@ public class ROCpdMemAllocEventHandler implements IGpuEventHandler {
         int rootQuark = ssb.getQuarkAbsoluteAndAdd(GpuCallStackAnalysis.ROOT, "Process: " + pid.toString()); //$NON-NLS-1$
         int threadQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Thread: " + tid.toString()); //$NON-NLS-1$
 
-        int streamQuark = 0;
+        int agentQuark = 0;
 
         if(isGPU) {
-            streamQuark = ssb.getQuarkRelativeAndAdd(threadQuark, "Stream: " + streamId.toString()); //$NON-NLS-1$
+            int streamQuark = ssb.getQuarkRelativeAndAdd(threadQuark, "Stream: " + streamId.toString()); //$NON-NLS-1$
+            agentQuark = ssb.getQuarkRelativeAndAdd(streamQuark, "Agent: " + agentId.toString()); //$NON-NLS-1$
         } else {
-            streamQuark = threadQuark;
+            int cpuTraceQuark = ssb.getQuarkRelativeAndAdd(threadQuark, "CPU Trace"); //$NON-NLS-1$
+            agentQuark = cpuTraceQuark;
         }
-
-        int kernelDispatchQuark = ssb.getQuarkRelativeAndAdd(streamQuark, "Memory Allocation [Agent ID]"); //$NON-NLS-1$
-        int agentQuark = ssb.getQuarkRelativeAndAdd(kernelDispatchQuark, agentId.toString());
 
         IApiEventLayout apiLayout = layout.getCorrespondingApiLayout(event);
         int callStackQuark = ssb.getQuarkRelativeAndAdd(agentQuark, CallStackAnalysis.CALL_STACK);
 
         if (apiLayout.isBeginEvent(event)) {
-            ssb.pushAttribute(event.getTimestamp().getValue(), apiLayout.getEventName(event), callStackQuark);
+            ssb.pushAttribute(event.getTimestamp().getValue(), "Memory Allocation: ID: " + allocation_id, callStackQuark); //$NON-NLS-1$
         } else {
             ssb.popAttribute(event.getTimestamp().getValue(), callStackQuark);
         }

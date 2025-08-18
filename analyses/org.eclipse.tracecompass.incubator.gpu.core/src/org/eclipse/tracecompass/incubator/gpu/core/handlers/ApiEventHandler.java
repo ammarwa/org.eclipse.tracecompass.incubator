@@ -18,7 +18,6 @@ import org.eclipse.tracecompass.incubator.gpu.core.trace.IGpuTraceEventLayout.IA
 import org.eclipse.tracecompass.statesystem.core.ITmfStateSystemBuilder;
 import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
 import org.eclipse.tracecompass.tmf.core.statesystem.ITmfStateProvider;
-import org.eclipse.tracecompass.tmf.core.statesystem.ITmfStateProvider.FutureEventType;
 
 /**
  * Handler for All APIs used to pilot the GPU.
@@ -37,24 +36,26 @@ public class ApiEventHandler implements IGpuEventHandler {
         if (pid == null) {
             return;
         }
+        Long region_id = event.getContent().getFieldValue(Long.class, "region_id"); //$NON-NLS-1$
+        if (region_id == null) {
+            return;
+        }
+        Long streamId = event.getContent().getFieldValue(Long.class, "stream_id"); //$NON-NLS-1$
         int rootQuark = ssb.getQuarkAbsoluteAndAdd(GpuCallStackAnalysis.ROOT, "Process: " + pid.toString()); //$NON-NLS-1$
         int threadQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Thread: " + tid.toString()); //$NON-NLS-1$
+        int cpuTraceQuark = ssb.getQuarkRelativeAndAdd(threadQuark, "CPU Trace"); //$NON-NLS-1$
+        int streamQuark = cpuTraceQuark;
+        if (streamId != null) {
+            streamQuark = ssb.getQuarkRelativeAndAdd(cpuTraceQuark, "Stream: " + streamId.toString()); //$NON-NLS-1$
+        }
 
         IApiEventLayout apiLayout = layout.getCorrespondingApiLayout(event);
-        int apiQuark = ssb.getQuarkRelativeAndAdd(threadQuark, apiLayout.getApiName());
-        int callStackQuark = ssb.getQuarkRelativeAndAdd(apiQuark, CallStackAnalysis.CALL_STACK);
+        int callStackQuark = ssb.getQuarkRelativeAndAdd(streamQuark, CallStackAnalysis.CALL_STACK);
 
         if (apiLayout.isBeginEvent(event)) {
-            ssb.pushAttribute(event.getTimestamp().getValue(), apiLayout.getEventName(event), callStackQuark);
+            ssb.pushAttribute(event.getTimestamp().getValue(), region_id + ": " + apiLayout.getEventName(event), callStackQuark); //$NON-NLS-1$
         } else {
             ssb.popAttribute(event.getTimestamp().getValue(), callStackQuark);
-        }
-        if (!layout.fieldDuration().equals("")) { //$NON-NLS-1$
-            Long duration = event.getContent().getFieldValue(Long.class, layout.fieldDuration());
-            if (duration == null) {
-                duration = 1L;
-            }
-            stateProvider.addFutureEvent(event.getTimestamp().getValue() + duration, event, callStackQuark, FutureEventType.POP);
         }
     }
 }
