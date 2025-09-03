@@ -46,7 +46,8 @@ jobs:
         PRODUCT_DIR="rcp/org.eclipse.tracecompass.incubator.rcp.product/target/products"
         if [ -d "$PRODUCT_DIR" ]; then
           echo "linux_artifact=$(find $PRODUCT_DIR -name '*linux*.tar.gz' | head -1)" >> $GITHUB_OUTPUT
-          echo "macos_artifact=$(find $PRODUCT_DIR -name '*macosx*.tar.gz' | head -1)" >> $GITHUB_OUTPUT
+          echo "macos_x86_64_artifact=$(find $PRODUCT_DIR -name '*macosx*x86_64*.tar.gz' | head -1)" >> $GITHUB_OUTPUT
+          echo "macos_aarch64_artifact=$(find $PRODUCT_DIR -name '*macosx*aarch64*.tar.gz' | head -1)" >> $GITHUB_OUTPUT
           echo "windows_artifact=$(find $PRODUCT_DIR -name '*win32*.zip' | head -1)" >> $GITHUB_OUTPUT
         else
           echo "Product directory not found: $PRODUCT_DIR"
@@ -68,7 +69,8 @@ jobs:
           
           ## Downloads
           - **Linux**: trace-compass-*-linux.gtk.x86_64.tar.gz
-          - **macOS**: trace-compass-*-macosx.cocoa.x86_64.tar.gz  
+          - **macOS (Intel)**: trace-compass-*-macosx.cocoa.x86_64.tar.gz  
+          - **macOS (Apple Silicon)**: trace-compass-*-macosx.cocoa.aarch64.tar.gz  
           - **Windows**: trace-compass-*-win32.win32.x86_64.zip
         draft: false
         prerelease: false
@@ -84,15 +86,26 @@ jobs:
         asset_name: trace-compass-${{ steps.timestamp.outputs.timestamp }}-linux.gtk.x86_64.tar.gz
         asset_content_type: application/gzip
 
-    - name: Upload macOS Release Asset
-      if: steps.artifacts.outputs.macos_artifact != ''
+    - name: Upload macOS (Intel) Release Asset
+      if: steps.artifacts.outputs.macos_x86_64_artifact != ''
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ steps.artifacts.outputs.macos_artifact }}
+        asset_path: ${{ steps.artifacts.outputs.macos_x86_64_artifact }}
         asset_name: trace-compass-${{ steps.timestamp.outputs.timestamp }}-macosx.cocoa.x86_64.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload macOS (Apple Silicon) Release Asset
+      if: steps.artifacts.outputs.macos_aarch64_artifact != ''
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.artifacts.outputs.macos_aarch64_artifact }}
+        asset_name: trace-compass-${{ steps.timestamp.outputs.timestamp }}-macosx.cocoa.aarch64.tar.gz
         asset_content_type: application/gzip
 
     - name: Upload Windows Release Asset
