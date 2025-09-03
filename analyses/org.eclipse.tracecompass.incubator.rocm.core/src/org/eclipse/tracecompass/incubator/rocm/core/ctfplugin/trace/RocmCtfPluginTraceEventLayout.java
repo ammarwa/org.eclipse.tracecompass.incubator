@@ -115,7 +115,11 @@ public class RocmCtfPluginTraceEventLayout implements IGpuTraceEventLayout {
 
     @Override
     public boolean isKernelDispatch(ITmfEvent event) {
-        return event.getName().startsWith(KERNEL_DISPATCH);
+        String kernel_name = event.getContent().getFieldValue(String.class, "name"); //$NON-NLS-1$
+        if (kernel_name == null) {
+            return event.getName().startsWith(KERNEL_DISPATCH);
+        }
+        return event.getName().startsWith(KERNEL_DISPATCH) && !kernel_name.startsWith("__amd_rocclr"); //$NON-NLS-1$
     }
 
     @Override

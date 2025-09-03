@@ -53,15 +53,13 @@ public class ROCpdMemEventHandler implements IGpuEventHandler {
             return;
         }
         int rootQuark = ssb.getQuarkAbsoluteAndAdd(GpuCallStackAnalysis.ROOT, "Process: " + pid.toString()); //$NON-NLS-1$
-        int threadQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Thread: " + tid.toString()); //$NON-NLS-1$
-        int streamQuark = ssb.getQuarkRelativeAndAdd(threadQuark, "Stream: " + streamId.toString()); //$NON-NLS-1$
-        int MemCpyQuark = ssb.getQuarkRelativeAndAdd(streamQuark, "SRC Agent: " + srcAgentId.toString() + " : DST Agent: " + dstAgentId.toString()); //$NON-NLS-1$ //$NON-NLS-2$
+        int streamQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Stream: " + streamId.toString()); //$NON-NLS-1$
 
         IApiEventLayout apiLayout = layout.getCorrespondingApiLayout(event);
-        int callStackQuark = ssb.getQuarkRelativeAndAdd(MemCpyQuark, CallStackAnalysis.CALL_STACK);
+        int callStackQuark = ssb.getQuarkRelativeAndAdd(streamQuark, CallStackAnalysis.CALL_STACK);
 
         if (apiLayout.isBeginEvent(event)) {
-            ssb.pushAttribute(event.getTimestamp().getValue(), "Memory Copy: ID: " + copy_id, callStackQuark); //$NON-NLS-1$
+            ssb.pushAttribute(event.getTimestamp().getValue(), "Memory Copy: ID: " + copy_id + " SRC Agent: " + srcAgentId.toString() + " : DST Agent: " + dstAgentId.toString(), callStackQuark); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         } else {
             ssb.popAttribute(event.getTimestamp().getValue(), callStackQuark);
         }
