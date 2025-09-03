@@ -28,6 +28,28 @@ the archives for linux, macos and Windows. The sub-directories
 `org.eclipse.tracecompass.incubator.rcp/<os>/...` contain the executable for each
 OS.
 
+### macOS Gatekeeper and Code Signing
+
+**Important for macOS users**: Development builds (including those from GitHub Actions) are unsigned and will trigger macOS Gatekeeper security warnings. You may see an error like "trace-compass is damaged and can't be opened".
+
+To use unsigned development builds on macOS:
+
+1. **Method 1 - Right-click to open:**
+   - Extract the downloaded .tar.gz file
+   - Right-click on the `trace-compass.app` file and select "Open"
+   - When the security warning appears, click "Open" to bypass Gatekeeper
+
+2. **Method 2 - Remove quarantine attribute:**
+   ```bash
+   xattr -d com.apple.quarantine /path/to/trace-compass.app
+   ```
+
+3. **Method 3 - System Preferences:**
+   - Go to System Preferences → Security & Privacy → General
+   - Click "Open Anyway" when the warning appears
+
+**Note**: Official Eclipse releases will be properly code-signed and won't require these steps.
+
 To generate the javadoc from the Trace Compass source code, run the following
 command from the top-level directory:
 
