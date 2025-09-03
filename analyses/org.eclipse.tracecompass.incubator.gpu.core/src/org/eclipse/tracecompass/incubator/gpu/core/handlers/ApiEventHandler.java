@@ -40,17 +40,10 @@ public class ApiEventHandler implements IGpuEventHandler {
         if (region_id == null) {
             return;
         }
-        Long streamId = event.getContent().getFieldValue(Long.class, "stream_id"); //$NON-NLS-1$
         int rootQuark = ssb.getQuarkAbsoluteAndAdd(GpuCallStackAnalysis.ROOT, "Process: " + pid.toString()); //$NON-NLS-1$
         int threadQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Thread: " + tid.toString()); //$NON-NLS-1$
-        int cpuTraceQuark = ssb.getQuarkRelativeAndAdd(threadQuark, "CPU Trace"); //$NON-NLS-1$
-        int streamQuark = cpuTraceQuark;
-        if (streamId != null) {
-            streamQuark = ssb.getQuarkRelativeAndAdd(cpuTraceQuark, "Stream: " + streamId.toString()); //$NON-NLS-1$
-        }
-
         IApiEventLayout apiLayout = layout.getCorrespondingApiLayout(event);
-        int callStackQuark = ssb.getQuarkRelativeAndAdd(streamQuark, CallStackAnalysis.CALL_STACK);
+        int callStackQuark = ssb.getQuarkRelativeAndAdd(threadQuark, CallStackAnalysis.CALL_STACK);
 
         if (apiLayout.isBeginEvent(event)) {
             ssb.pushAttribute(event.getTimestamp().getValue(), region_id + ": " + apiLayout.getEventName(event), callStackQuark); //$NON-NLS-1$

@@ -49,15 +49,13 @@ public class ROCpdKernelEventHandler implements IGpuEventHandler {
             return;
         }
         int rootQuark = ssb.getQuarkAbsoluteAndAdd(GpuCallStackAnalysis.ROOT, "Process: " + pid.toString()); //$NON-NLS-1$
-        int threadQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Thread: " + tid.toString()); //$NON-NLS-1$
-        int streamQuark = ssb.getQuarkRelativeAndAdd(threadQuark, "Stream: " + streamId.toString()); //$NON-NLS-1$
-        int agentQuark = ssb.getQuarkRelativeAndAdd(streamQuark, "Agent: " + agentId.toString()); //$NON-NLS-1$
+        int streamQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Stream: " + streamId.toString()); //$NON-NLS-1$
 
         IApiEventLayout apiLayout = layout.getCorrespondingApiLayout(event);
-        int callStackQuark = ssb.getQuarkRelativeAndAdd(agentQuark, CallStackAnalysis.CALL_STACK);
+        int callStackQuark = ssb.getQuarkRelativeAndAdd(streamQuark, CallStackAnalysis.CALL_STACK);
 
         if (apiLayout.isBeginEvent(event)) {
-            ssb.pushAttribute(event.getTimestamp().getValue(), "Kernel Dispatch: ID: " + kernel_id + " (" + apiLayout.getEventName(event) + ")", callStackQuark); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            ssb.pushAttribute(event.getTimestamp().getValue(), "Kernel Dispatch: ID: " + kernel_id + " Agent ID: " + agentId.toString() + " (" + apiLayout.getEventName(event) + ")", callStackQuark); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         } else {
             ssb.popAttribute(event.getTimestamp().getValue(), callStackQuark);
         }

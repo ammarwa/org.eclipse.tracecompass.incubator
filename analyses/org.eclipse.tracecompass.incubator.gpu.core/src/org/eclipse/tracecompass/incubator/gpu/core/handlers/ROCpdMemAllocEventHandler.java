@@ -54,23 +54,22 @@ public class ROCpdMemAllocEventHandler implements IGpuEventHandler {
             return;
         }
         int rootQuark = ssb.getQuarkAbsoluteAndAdd(GpuCallStackAnalysis.ROOT, "Process: " + pid.toString()); //$NON-NLS-1$
-        int threadQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Thread: " + tid.toString()); //$NON-NLS-1$
 
-        int agentQuark = 0;
+
+        int streamQuark = 0;
 
         if(isGPU) {
-            int streamQuark = ssb.getQuarkRelativeAndAdd(threadQuark, "Stream: " + streamId.toString()); //$NON-NLS-1$
-            agentQuark = ssb.getQuarkRelativeAndAdd(streamQuark, "Agent: " + agentId.toString()); //$NON-NLS-1$
+            streamQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Stream: " + streamId.toString()); //$NON-NLS-1$
         } else {
-            int cpuTraceQuark = ssb.getQuarkRelativeAndAdd(threadQuark, "CPU Trace"); //$NON-NLS-1$
-            agentQuark = cpuTraceQuark;
+            int threadQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Thread: " + tid.toString()); //$NON-NLS-1$
+            streamQuark = threadQuark;
         }
 
         IApiEventLayout apiLayout = layout.getCorrespondingApiLayout(event);
-        int callStackQuark = ssb.getQuarkRelativeAndAdd(agentQuark, CallStackAnalysis.CALL_STACK);
+        int callStackQuark = ssb.getQuarkRelativeAndAdd(streamQuark, CallStackAnalysis.CALL_STACK);
 
         if (apiLayout.isBeginEvent(event)) {
-            ssb.pushAttribute(event.getTimestamp().getValue(), "Memory Allocation: ID: " + allocation_id, callStackQuark); //$NON-NLS-1$
+            ssb.pushAttribute(event.getTimestamp().getValue(), "Memory Allocation: ID: " + allocation_id + " Agent ID: " + agentId.toString(), callStackQuark); //$NON-NLS-1$ //$NON-NLS-2$
         } else {
             ssb.popAttribute(event.getTimestamp().getValue(), callStackQuark);
         }
