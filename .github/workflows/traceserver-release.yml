@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - rocpd_support
+  pull_request:
+    branches:
+      - rocpd_support
 
 jobs:
   build-and-release:
@@ -53,6 +56,7 @@ jobs:
         fi
 
     - name: Create Release
+      if: github.event_name == 'push'
       id: create_release
       uses: actions/create-release@v1
       env:
@@ -74,7 +78,7 @@ jobs:
         prerelease: false
 
     - name: Upload Linux Release Asset
-      if: steps.artifacts.outputs.linux_artifact != ''
+      if: github.event_name == 'push' && steps.artifacts.outputs.linux_artifact != ''
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -85,7 +89,7 @@ jobs:
         asset_content_type: application/gzip
 
     - name: Upload macOS (Intel) Release Asset
-      if: steps.artifacts.outputs.macos_x86_64_artifact != ''
+      if: github.event_name == 'push' && steps.artifacts.outputs.macos_x86_64_artifact != ''
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -96,7 +100,7 @@ jobs:
         asset_content_type: application/gzip
 
     - name: Upload macOS (Apple Silicon) Release Asset
-      if: steps.artifacts.outputs.macos_aarch64_artifact != ''
+      if: github.event_name == 'push' && steps.artifacts.outputs.macos_aarch64_artifact != ''
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -107,7 +111,7 @@ jobs:
         asset_content_type: application/gzip
 
     - name: Upload Windows Release Asset
-      if: steps.artifacts.outputs.windows_artifact != ''
+      if: github.event_name == 'push' && steps.artifacts.outputs.windows_artifact != ''
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
