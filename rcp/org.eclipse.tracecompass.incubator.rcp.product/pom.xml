@@ -130,6 +130,7 @@
                   <goal>sign</goal>
                 </goals>
                 <configuration>
+                  <continueOnFail>true</continueOnFail>
                   <signFiles>
                     <signFile>${project.build.directory}/products/${productId}/macosx/cocoa/x86_64/${rootFolderMac}</signFile>
                     <signFile>${project.build.directory}/products/${productId}/macosx/cocoa/aarch64/${rootFolderMac}</signFile>
