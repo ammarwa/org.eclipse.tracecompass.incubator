@@ -120,7 +120,6 @@
                 <groupId>org.eclipse.tycho</groupId>
                 <artifactId>tycho-gpg-plugin</artifactId>
             </plugin>
-<!--
           <plugin>
             <groupId>org.eclipse.cbi.maven.plugins</groupId>
             <artifactId>eclipse-macsigner-plugin</artifactId>
@@ -131,14 +130,15 @@
                   <goal>sign</goal>
                 </goals>
                 <configuration>
+                  <continueOnFail>true</continueOnFail>
                   <signFiles>
                     <signFile>${project.build.directory}/products/${productId}/macosx/cocoa/x86_64/${rootFolderMac}</signFile>
+                    <signFile>${project.build.directory}/products/${productId}/macosx/cocoa/aarch64/${rootFolderMac}</signFile>
                   </signFiles>
                 </configuration>
               </execution>
             </executions>
           </plugin>
- -->
         </plugins>
       </build>
     </profile>
