@@ -23,7 +23,7 @@ jobs:
         cache: maven
 
     - name: Set up Maven
-      uses: stCarolas/setup-maven@07fbbe97d97ef44336b7382563d66743297e442f
+      uses: stCarolas/setup-maven@07fbbe97d97ef44336b7382563d66743297e442f # v4.5
       with:
         maven-version: 3.9.5
 
@@ -32,8 +32,6 @@ jobs:
       with:
         run: >-
           mvn -B clean install
-          -pl trace-server/org.eclipse.tracecompass.incubator.trace.server.product
-          -am
 
     - name: Create timestamp for release
       id: timestamp
