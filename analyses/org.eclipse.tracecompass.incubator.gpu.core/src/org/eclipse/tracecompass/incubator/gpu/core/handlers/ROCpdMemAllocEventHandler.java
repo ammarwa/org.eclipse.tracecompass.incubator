@@ -24,29 +24,52 @@ import org.eclipse.tracecompass.tmf.core.statesystem.ITmfStateProvider;
  *
  * This handler handles all API calls that are written to call stacks.
  */
-public class ApiEventHandler implements IGpuEventHandler {
+public class ROCpdMemAllocEventHandler implements IGpuEventHandler {
 
     @Override
     public void handleEvent(ITmfEvent event, ITmfStateSystemBuilder ssb, IGpuTraceEventLayout layout, ITmfStateProvider stateProvider) {
-        Long tid = event.getContent().getFieldValue(Long.class, layout.fieldThreadId());
-        Long pid = event.getContent().getFieldValue(Long.class, "pid"); //$NON-NLS-1$
-        if (tid == null) {
+        String agentType = event.getContent().getFieldValue(String.class, "agent_type"); //$NON-NLS-1$
+        boolean isGPU = false;
+        if (agentType != null && agentType.contains("GPU")) { //$NON-NLS-1$
+            isGPU = true;
+        }
+        Long agentId = event.getContent().getFieldValue(Long.class, "agent_abs_index"); //$NON-NLS-1$
+        if (agentId == null) {
             return;
         }
+        Long allocation_id = event.getContent().getFieldValue(Long.class, "allocation_id"); //$NON-NLS-1$
+        if (allocation_id == null) {
+            return;
+        }
+        Long pid = event.getContent().getFieldValue(Long.class, "pid"); //$NON-NLS-1$
         if (pid == null) {
             return;
         }
-        Long region_id = event.getContent().getFieldValue(Long.class, "region_id"); //$NON-NLS-1$
-        if (region_id == null) {
+        Long streamId = event.getContent().getFieldValue(Long.class, "stream_id"); //$NON-NLS-1$
+        if (streamId == null) {
+            return;
+        }
+        Long tid = event.getContent().getFieldValue(Long.class, layout.fieldThreadId());
+        if (tid == null) {
             return;
         }
         int rootQuark = ssb.getQuarkAbsoluteAndAdd(GpuCallStackAnalysis.ROOT, "Process: " + pid.toString()); //$NON-NLS-1$
-        int threadQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Thread: " + tid.toString()); //$NON-NLS-1$
+
+
+        int streamQuark = 0;
+
+        if(isGPU) {
+            streamQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Stream: " + streamId.toString()); //$NON-NLS-1$
+        } else {
+            int threadQuark = ssb.getQuarkRelativeAndAdd(rootQuark, "Thread: " + tid.toString()); //$NON-NLS-1$
+            streamQuark = threadQuark;
+        }
+
         IApiEventLayout apiLayout = layout.getCorrespondingApiLayout(event);
-        int callStackQuark = ssb.getQuarkRelativeAndAdd(threadQuark, CallStackAnalysis.CALL_STACK);
+        int callStackQuark = ssb.getQuarkRelativeAndAdd(streamQuark, CallStackAnalysis.CALL_STACK);
 
         if (apiLayout.isBeginEvent(event)) {
-            ssb.pushAttribute(event.getTimestamp().getValue(), region_id + ": " + apiLayout.getEventName(event), callStackQuark); //$NON-NLS-1$
+            ssb.pushAttribute(event.getTimestamp().getValue(), "Memory Allocation: ID: " + allocation_id + " Agent ID: " + agentId.toString(), callStackQuark); //$NON-NLS-1$ //$NON-NLS-2$
         } else {
             ssb.popAttribute(event.getTimestamp().getValue(), callStackQuark);
         }

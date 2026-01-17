@@ -18,6 +18,9 @@ import java.util.Objects;
 import org.eclipse.tracecompass.analysis.profiling.core.instrumented.InstrumentedCallStackAnalysis;
 import org.eclipse.tracecompass.incubator.gpu.core.handlers.ApiEventHandler;
 import org.eclipse.tracecompass.incubator.gpu.core.handlers.IGpuEventHandler;
+import org.eclipse.tracecompass.incubator.gpu.core.handlers.ROCpdKernelEventHandler;
+import org.eclipse.tracecompass.incubator.gpu.core.handlers.ROCpdMemAllocEventHandler;
+import org.eclipse.tracecompass.incubator.gpu.core.handlers.ROCpdMemEventHandler;
 import org.eclipse.tracecompass.incubator.gpu.core.trace.IGpuTrace;
 import org.eclipse.tracecompass.incubator.gpu.core.trace.IGpuTraceEventLayout;
 import org.eclipse.tracecompass.statesystem.core.ITmfStateSystem;
@@ -67,11 +70,17 @@ public class GpuCallStackAnalysis extends InstrumentedCallStackAnalysis {
 
         private final IGpuTraceEventLayout fLayout;
         private IGpuEventHandler fApiEventHandler;
+        private IGpuEventHandler fGPUKernelDispatchEventHandler;
+        private IGpuEventHandler fMemCopyEventHandler;
+        private IGpuEventHandler fMemAllocEventHandler;
 
         public GpuCallStackStateProvider(ITmfTrace trace) {
             super(trace, ID);
             fLayout = ((IGpuTrace) trace).getGpuTraceEventLayout();
             fApiEventHandler = new ApiEventHandler();
+            fGPUKernelDispatchEventHandler = new ROCpdKernelEventHandler();
+            fMemCopyEventHandler = new ROCpdMemEventHandler();
+            fMemAllocEventHandler = new ROCpdMemAllocEventHandler();
         }
 
         @Override
@@ -92,6 +101,19 @@ public class GpuCallStackAnalysis extends InstrumentedCallStackAnalysis {
             }
             if (fLayout.isApiEvent(event)) {
                 fApiEventHandler.handleEvent(event, ssb, fLayout, this);
+            }
+            if (fLayout.isMemcpy(event)) {
+                fMemCopyEventHandler.handleEvent(event, ssb, fLayout, this);
+            }
+            if (fLayout.isKernelDispatch(event)) {
+                fGPUKernelDispatchEventHandler.handleEvent(event, ssb, fLayout, this);
+            }
+            if (fLayout.isMemAlloc(event)) {
+                fMemAllocEventHandler.handleEvent(event, ssb, fLayout, this);
+            }
+            if (fLayout.isCounterCollection(event)) {
+                // TODO Implement Counter Collection Event Handler
+                return;
             }
         }
     }
